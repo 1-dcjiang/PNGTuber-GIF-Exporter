@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""VRM / GLB 模型 -> 序列帧 -> GIF 的 Web 渲染桥接。
+"""VRM / glTF 模型 -> 序列帧 -> GIF 的 Web 渲染桥接。
 
 链路：本机 Node 无头脚本调用系统 Chrome/Edge 加载模型，逐帧截 PNG 到临时目录，
 再交回本包既有的帧序列管线打包透明循环 GIF。不内嵌浏览器内核、不内嵌 Node。

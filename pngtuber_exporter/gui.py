@@ -222,10 +222,10 @@ class App:
 
         self._refresh_windows()
 
-    # ===== Tab 4: 3D 模型（VRM） =====
+    # ===== Tab 4: 3D 模型（VRM / glTF） =====
     def _build_model_tab(self) -> None:
         frm = ttk.Frame(self.nb, padding=10)
-        self.nb.add(frm, text="3D 模型（VRM）")
+        self.nb.add(frm, text="3D 模型（VRM / glTF）")
 
         self.model_file = StringVar()
         self.model_out = StringVar()
@@ -245,7 +245,7 @@ class App:
 
         self.model_info = ttk.Label(
             frm,
-            text="支持 .vrm 或带 VRM 扩展的 .glb/.gltf；普通 GLB 不含 VRM 扩展，会提示改用录屏。选择模型文件或所在文件夹均可。",
+            text="支持 .vrm/.glb/.gltf；VRM 驱动嘴型、眨眼与头部微动，普通 glTF/GLB 渲染模型默认姿态。选择模型文件或所在文件夹均可。",
             foreground="#555",
         )
         self.model_info.grid(row=2, column=0, columnspan=3, sticky="w", pady=(10, 0))
@@ -713,7 +713,7 @@ class App:
         if not self.model_out.get():
             self.model_out.set(str(Path(path).parent / "output"))
         kind = classify_model(path)
-        label = {"vrm": "VRM 3D"}.get(kind, "未知格式")
+        label = {"vrm": "3D 模型"}.get(kind, "未知格式")
         ok = kind == "vrm"
         self.model_info.configure(text=f"识别: {label}", foreground="#2a7" if ok else "#c00")
 
@@ -726,7 +726,7 @@ class App:
         m = self._resolve_model_entry(self.model_file.get().strip())
         self.model_file.set(m)
         if not m:
-            messagebox.showwarning("提示", "请先选择 VRM 模型文件（.vrm 或带 VRM 扩展的 .glb/.gltf）。")
+            messagebox.showwarning("提示", "请先选择 3D 模型文件（.vrm/.glb/.gltf）。")
             return
         if not getattr(self, "_env_ready", False):
             self.check_env()
@@ -779,7 +779,7 @@ HELP_TEXT = """\
    · 已有 PNGTuber 拆件（待机 / 说话 / 眨眼等图）→「PNGTuber 工程」
    · 一排按顺序排好的图片            →「帧序列目录」
    · 想录制软件里正在动的画面        →「屏幕录制」
-   · 有 .vrm 或带 VRM 扩展的 .glb/.gltf →「3D 模型（VRM）」
+   · 有 .vrm / .glb / .gltf 模型 →「3D 模型（VRM / glTF）」
 3. 选好输入素材和输出目录，点导出按钮；结果在日志框和输出目录里。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -791,8 +791,9 @@ HELP_TEXT = """\
   打包成循环动画；GIF 素材会自动展开成多帧。
 · 屏幕录制：抓取全屏、指定窗口或自定义区域，把模型或软件里
   跑起来的画面录成动画；适合软件本身不能直接导出 GIF 的情况。
-· 3D 模型（VRM）：无头加载 VRM（.vrm 或带 VRM 扩展的 .glb），叠加说话嘴型、
-  眨眼与轻微头部摆动，逐帧截图后打包成透明循环动画；模型保持 T-pose，不播放自带骨骼动画。
+· 3D 模型（VRM / glTF）：无头加载 .vrm / .glb / .gltf；VRM 叠加说话嘴型、
+  眨眼与轻微头部摆动，普通 glTF/GLB 只渲染模型默认姿态；逐帧截图后打包成透明循环动画。
+  两种模型都不播放自带骨骼动画，需要骨骼动作请用屏幕录制。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 三、参数怎么理解（高级视图）
@@ -820,12 +821,12 @@ HELP_TEXT = """\
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 五、常见问题
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-· 模型模式提示缺 Node / 浏览器：在「3D 模型（VRM）」页的运行环境区查看状态；
+· 模型模式提示缺 Node / 浏览器：在「3D 模型（VRM / glTF）」页的运行环境区查看状态；
   缺 Node 可点「下载 Node」自动装便携版（免安装），缺浏览器按提示装 Chrome / Edge。
   其余三种模式不依赖 Node 和浏览器。
 · 透明边缘有锯齿：GIF 会把半透明边缘简化成硬边；需要干净边缘请把格式改为 APNG。
 · 导出的人物是半身 / 大头，和全身立绘对不上：PNGTuber 工程只搬运你提供的状态图，素材是半身差分就出半身；
-  要完整全身动画，请用「3D 模型（VRM）」模式加载 .vrm 或带 VRM 扩展的 .glb 模型。
+  要完整全身动画，请用「3D 模型（VRM / glTF）」模式加载 .vrm / .glb / .gltf 模型。
 · 待机、说话、眨眼几帧看起来一模一样：确认 idle / talking / blink 素材本身是不同的差分图，
   而不是同一张图复制改名；只有局部（嘴、眼）不同的立绘才能交替出动作。
 · 文件太大：切到「小体积优先」档位，或在高级里降低帧率、边长上限与分辨率。
@@ -835,7 +836,7 @@ HELP_TEXT = """\
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 六、支持的素材格式
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-图片：PNG / JPG / JPEG / WebP / GIF；模型：VRM（.vrm，或带 VRM 扩展的 .glb/.gltf）。
+图片：PNG / JPG / JPEG / WebP / GIF；模型：VRM / glTF / GLB。
 使用第三方模型需遵守模型作者与对应软件的许可。
 """
 

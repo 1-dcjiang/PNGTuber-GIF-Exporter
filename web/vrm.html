@@ -44,12 +44,14 @@
       scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
       let vrm = null;
+      let modelRoot = null;
       let headBone = null;
       let ready = false;
       const CYCLE = 12;
       const TALK_SEGS = [[2, 4], [9, 10]];
 
       function setExpr(name, weight) {
+        if (!vrm) return;
         const e = vrm.expressionManager && vrm.expressionManager.getExpression(name);
         if (e) e.weight = weight;
       }
@@ -63,23 +65,25 @@
         return 0.0;
       }
 
-      // 固定循环脚本：待机 <-> 说话（正弦开合），弧线眨眼，头部轻微偏航
+      // VRM：待机 <-> 说话、眨眼、头部轻微偏航；普通 glTF/GLB：保持模型静态姿态
       function applyFrame(i) {
-        if (!vrm) return;
-        const phase = ((i % CYCLE) + CYCLE) % CYCLE;
-        const talk = segOpen(phase);
-        // 嘴型：说话段按正弦开合，叠加轻微 ih 元音
-        setExpr("aa", talk * 0.85);
-        setExpr("ih", talk * 0.2);
-        // 眨眼弧线：半闭 -> 闭合 -> 半睁
-        const blink = phase === 5 ? 0.35 : phase === 6 ? 1.0 : phase === 7 ? 0.35 : 0.0;
-        setExpr("blink", blink);
-        // 头部轻微左右偏航（约 ±2.9°）+ 极轻微俯仰，不移动位置、不驱动躯干
-        if (headBone) {
-          headBone.rotation.y = 0.05 * Math.sin((i / CYCLE) * 2 * Math.PI);
-          headBone.rotation.x = 0.015 * Math.sin((i / CYCLE) * 2 * Math.PI);
+        if (!modelRoot) return;
+        if (vrm) {
+          const phase = ((i % CYCLE) + CYCLE) % CYCLE;
+          const talk = segOpen(phase);
+          // 嘴型：说话段按正弦开合，叠加轻微 ih 元音
+          setExpr("aa", talk * 0.85);
+          setExpr("ih", talk * 0.2);
+          // 眨眼弧线：半闭 -> 闭合 -> 半睁
+          const blink = phase === 5 ? 0.35 : phase === 6 ? 1.0 : phase === 7 ? 0.35 : 0.0;
+          setExpr("blink", blink);
+          // 头部轻微左右偏航（约 ±2.9°）+ 极轻微俯仰，不移动位置、不驱动躯干
+          if (headBone) {
+            headBone.rotation.y = 0.05 * Math.sin((i / CYCLE) * 2 * Math.PI);
+            headBone.rotation.x = 0.015 * Math.sin((i / CYCLE) * 2 * Math.PI);
+          }
+          vrm.update(1 / 60);
         }
-        vrm.update(1 / 60);
         renderer.render(scene, camera);
       }
 
@@ -88,25 +92,27 @@
         loader.register((parser) => new VRMLoaderPlugin(parser));
         const gltf = await loader.loadAsync(modelUrl);
         vrm = gltf.userData.vrm;
-        if (!vrm) {
-          throw new Error("该文件不含 VRM 扩展，仅支持 .vrm 或带 VRM 扩展的 .glb；普通 glTF/GLB 请改用屏幕录制模式");
+        modelRoot = vrm ? vrm.scene : gltf.scene;
+        if (!modelRoot) {
+          throw new Error("模型文件没有可渲染的场景节点");
         }
-        VRMUtils.removeUnnecessaryJoints(vrm.scene);
-        vrm.scene.rotation.y = Math.PI; // 模型正面朝向 +z 相机
-        scene.add(vrm.scene);
-
-        try {
-          headBone = vrm.humanoid && vrm.humanoid.getBoneNode(VRMHumanBoneName.Head);
-        } catch (e) {
-          headBone = null;
+        if (vrm) {
+          VRMUtils.removeUnnecessaryJoints(vrm.scene);
+          vrm.scene.rotation.y = Math.PI; // 模型正面朝向 +z 相机
+          try {
+            headBone = vrm.humanoid && vrm.humanoid.getBoneNode(VRMHumanBoneName.Head);
+          } catch (e) {
+            headBone = null;
+          }
         }
+        scene.add(modelRoot);
 
         // 按包围盒把相机对准模型
-        const box = new THREE.Box3().setFromObject(vrm.scene);
+        const box = new THREE.Box3().setFromObject(modelRoot);
         const center = box.getCenter(new THREE.Vector3());
         const size3 = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size3.x, size3.y, size3.z) || 1;
-        camera.position.set(center.x, center.y + size3.y * 0.05, center.z + maxDim * 1.9);
+        camera.position.set(center.x, center.y + size3.y * 0.05, center.z + maxDim * 2.2);
         camera.lookAt(center.x, center.y + size3.y * 0.02, center.z);
         camera.near = maxDim * 0.01;
         camera.far = maxDim * 20;
@@ -115,7 +121,7 @@
         applyFrame(0);
         let meshCount = 0;
         const mats = [];
-        vrm.scene.traverse((o) => {
+        modelRoot.traverse((o) => {
           if (o.isMesh) {
             meshCount++;
             const m = o.material;
@@ -129,6 +135,9 @@
           }
         });
         const gl = renderer.getContext();
+        if (!meshCount) {
+          throw new Error("模型没有可渲染的网格");
+        }
         window.__debug = {
           center: [center.x, center.y, center.z],
           size: [size3.x, size3.y, size3.z],
@@ -138,6 +147,7 @@
           isWebGL2: renderer.capabilities.isWebGL2,
           glOk: !!gl,
           hasHead: !!headBone,
+          isVRM: !!vrm,
           mats: mats.slice(0, 5),
         };
         ready = true;
@@ -149,7 +159,7 @@
       window.__ready = false;
 
       init().catch((err) => {
-        console.error("VRM init failed:", err);
+        console.error("3D init failed:", err);
         window.__error = String(err && err.message ? err.message : err);
       });
     </script>
