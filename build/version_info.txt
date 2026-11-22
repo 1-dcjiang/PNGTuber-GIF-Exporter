@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 0, 3, 0),
-    prodvers=(1, 0, 3, 0),
+    filevers=(1, 0, 4, 0),
+    prodvers=(1, 0, 4, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -14,12 +14,12 @@ VSVersionInfo(
       StringTable('040904B0', [
         StringStruct('CompanyName', 'PNGTuber-GIF-Exporter'),
         StringStruct('FileDescription', 'PNGTuber / Frame Sequence / Screen Record / VRM to GIF'),
-        StringStruct('FileVersion', '1.0.3.0'),
+        StringStruct('FileVersion', '1.0.4.0'),
         StringStruct('InternalName', 'PNGTuber-GIF-Exporter'),
         StringStruct('LegalCopyright', 'Copyright (c) 2026 1-dcjiang. Licensed under the MIT License.'),
         StringStruct('OriginalFilename', 'PNGTuber-GIF-Exporter.exe'),
         StringStruct('ProductName', 'PNGTuber GIF Exporter'),
-        StringStruct('ProductVersion', '1.0.3.0')
+        StringStruct('ProductVersion', '1.0.4.0')
       ])
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])

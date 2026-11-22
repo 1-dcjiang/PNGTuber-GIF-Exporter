@@ -84,8 +84,12 @@ def _place(
         nh = max(1, round(img.height * scale))
         img = img.resize((nw, nh), Image.LANCZOS)
 
-    if canvas_w != img.width or canvas_h != img.height:
-        img = img.resize((canvas_w, canvas_h), Image.LANCZOS)
+    scale = min(canvas_w / img.width, canvas_h / img.height)
+    if abs(scale - 1.0) > 1e-3:
+        img = img.resize(
+            (max(1, round(img.width * scale)), max(1, round(img.height * scale))),
+            Image.LANCZOS,
+        )
 
     canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
     ox = int(meta.get("offset_x", 0) or 0)
@@ -360,8 +364,12 @@ def normalize_frames(
     out: list[Image.Image] = []
     for f in frames:
         f = f.convert("RGBA")
-        if f.width != cw or f.height != ch:
-            f = f.resize((cw, ch), Image.LANCZOS)
+        scale = min(cw / f.width, ch / f.height)
+        if abs(scale - 1.0) > 1e-3:
+            f = f.resize(
+                (max(1, round(f.width * scale)), max(1, round(f.height * scale))),
+                Image.LANCZOS,
+            )
         canvas = Image.new("RGBA", (cw, ch), background)
         canvas.alpha_composite(f, ((cw - f.width) // 2, (ch - f.height) // 2))
         out.append(canvas)

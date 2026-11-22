@@ -12,8 +12,8 @@
     3) 屏幕 / 窗口录屏:
        python main.py --record --duration 3 --region left,top,w,h --out <输出目录>
        python main.py --record --duration 3 --window "窗口标题关键词"
-    4) VRM/GLB 3D 模型:
-       python main.py --model <模型.vrm|模型.glb> --out <输出目录>
+    4) VRM 3D 模型（.vrm 或带 VRM 扩展的 .glb）:
+       python main.py --model <模型.vrm|带VRM扩展的模型.glb> --out <输出目录>
 """
 from __future__ import annotations
 
@@ -99,7 +99,7 @@ def run_model(model_path: Path, out_dir: Path, fps: int, frames: int, size: int,
     from pngtuber_exporter.web_render import classify_model, render_model
 
     kind = classify_model(model_path)
-    label = {"vrm": "VRM / GLB 3D"}.get(kind, "未知")
+    label = {"vrm": "VRM 3D"}.get(kind, "未知")
     print(f"格式: {label}  模型: {model_path.name}")
     result = render_model(
         model_path,
@@ -134,7 +134,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="PNGTuber / 帧序列 / 录屏 一键导出 GIF")
     ap.add_argument("--project", help="PNGTuber 工程文件夹")
     ap.add_argument("--frames", help="图片 / 帧序列目录")
-    ap.add_argument("--model", help="VRM/GLB/glTF 3D 模型(.vrm/.glb/.gltf)或其所在目录")
+    ap.add_argument("--model", help="VRM 3D 模型（.vrm，或带 VRM 扩展的 .glb/.gltf）或其所在目录")
     ap.add_argument("--model-frames", type=int, default=12, help="模型渲染帧数，默认 12")
     ap.add_argument("--model-size", type=int, default=768, help="模型离屏画布边长，默认 768")
     ap.add_argument("--record", action="store_true", help="屏幕 / 窗口录屏模式")

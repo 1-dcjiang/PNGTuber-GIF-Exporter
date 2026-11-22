@@ -88,6 +88,9 @@
         loader.register((parser) => new VRMLoaderPlugin(parser));
         const gltf = await loader.loadAsync(modelUrl);
         vrm = gltf.userData.vrm;
+        if (!vrm) {
+          throw new Error("该文件不含 VRM 扩展，仅支持 .vrm 或带 VRM 扩展的 .glb；普通 glTF/GLB 请改用屏幕录制模式");
+        }
         VRMUtils.removeUnnecessaryJoints(vrm.scene);
         vrm.scene.rotation.y = Math.PI; // 模型正面朝向 +z 相机
         scene.add(vrm.scene);

@@ -168,6 +168,8 @@ def render_model(
             str(fps),
             "--size",
             str(size),
+            "--browser",
+            str(browser),
         ]
         w("命令: " + " ".join(cmd))
 
