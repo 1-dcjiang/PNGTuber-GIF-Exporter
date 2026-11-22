@@ -1,0 +1,15 @@
+{
+  "name": "gif-exporter-web-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "无头浏览器渲染子运行时：加载 VRM/GLB 模型，逐帧截图供 Python 打包 GIF。",
+  "scripts": {
+    "test": "node --test path_guard.test.mjs"
+  },
+  "dependencies": {
+    "@pixiv/three-vrm": "^3.5.5",
+    "puppeteer-core": "^25.18.1",
+    "three": "^0.187.0"
+  }
+}

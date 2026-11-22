@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Web runtime
+node_modules/
+web/models/
+web/_frames*/
+
+# Build outputs
+dist/
+build/work/
+build/staging/
+build/*.spec
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
